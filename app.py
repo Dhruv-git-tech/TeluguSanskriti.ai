@@ -6,7 +6,7 @@ from openai import OpenAI
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# 🔐 Firebase from secrets
+# 🔐 Firebase Setup
 if not firebase_admin._apps:
     firebase_config = json.loads(st.secrets["FIREBASE_KEY"])
     cred = credentials.Certificate(firebase_config)
@@ -14,16 +14,16 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-# ✅ OpenAI v1.x client
+# 🔐 OpenAI Setup
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Streamlit UI setup
+# Streamlit Page Settings
 st.set_page_config(page_title="TeluguSanskriti.ai", layout="centered")
 st.title("🕉️ TeluguSanskriti.ai - Preserving Telugu Culture")
 
 menu = st.sidebar.selectbox("Navigate", ["Home", "Cultural Chatbot", "Contribute", "Gallery"])
 
-# 🏠 Modernized Home Page
+# 🏠 Modern Home Page (fixed use_column_width warning)
 if menu == "Home":
     st.markdown("""
         <div style='text-align: center; margin-bottom: 20px;'>
@@ -37,21 +37,21 @@ if menu == "Home":
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Ugadi_Pachadi.jpg/400px-Ugadi_Pachadi.jpg", use_column_width=True)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Ugadi_Pachadi.jpg/400px-Ugadi_Pachadi.jpg", use_container_width=True)
         st.markdown("**Share Recipes & Festivals**\n\nPost your stories, dishes, and rituals from your region.")
 
     with col2:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Kuchipudi.jpg/400px-Kuchipudi.jpg", use_column_width=True)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Kuchipudi.jpg/400px-Kuchipudi.jpg", use_container_width=True)
         st.markdown("**Explore Telugu Arts**\n\nLearn about dance forms, crafts, and performing traditions.")
 
     with col3:
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Tenali_Rama.jpg/400px-Tenali_Rama.jpg", use_column_width=True)
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Tenali_Rama.jpg/400px-Tenali_Rama.jpg", use_container_width=True)
         st.markdown("**Preserve Folklore**\n\nRecord your native dialect or share folk stories from elders.")
 
     st.markdown("---")
     st.info("📣 *Join our mission to build the largest open AI-ready cultural archive of Telugu heritage.*")
 
-# 💬 OpenAI-powered Chatbot
+# 💬 Chatbot
 elif menu == "Cultural Chatbot":
     st.subheader("🤖 Ask About Telugu Culture (ChatGPT)")
     question = st.text_input("Ask your question:")
@@ -70,7 +70,7 @@ elif menu == "Cultural Chatbot":
             except Exception as e:
                 st.error(f"❌ Error: {e}")
 
-# ✍️ Contribute Page
+# ✍️ Contribution Page
 elif menu == "Contribute":
     st.subheader("📝 Share a Cultural Contribution")
     category = st.selectbox("Category", ["Folklore", "Festival", "Recipe", "Proverb", "Other"])
@@ -88,15 +88,15 @@ elif menu == "Contribute":
         db.collection("contributions").add(doc)
         st.success("✅ Your contribution has been saved. Thank you!")
 
-# 🖼️ Cultural Gallery with Uploads
+# 🖼️ Gallery Page
 elif menu == "Gallery":
     st.subheader("📸 Upload a Cultural Photo")
     uploaded_img = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     caption = st.text_input("Caption (optional)")
     if uploaded_img and st.button("Upload Image"):
-        os.makedirs("uploads", exist_ok=True)  # Ensure folder exists
+        os.makedirs("uploads", exist_ok=True)
         img_path = f"uploads/{uploaded_img.name}"
         with open(img_path, "wb") as f:
             f.write(uploaded_img.getbuffer())
         st.success("✅ Uploaded successfully!")
-        st.image(uploaded_img, caption=caption)
+        st.image(uploaded_img, caption=caption, use_column_width=True)
