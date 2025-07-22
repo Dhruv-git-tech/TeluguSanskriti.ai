@@ -1,5 +1,5 @@
 streamlit
-google-generativeai
+openai
 firebase-admin
 python-dotenv
-openai-whisper
+whisper
