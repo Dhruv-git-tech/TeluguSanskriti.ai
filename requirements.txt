@@ -1,4 +1,4 @@
 streamlit
-openai
 firebase-admin
 python-dotenv
+openai>=1.0.0
