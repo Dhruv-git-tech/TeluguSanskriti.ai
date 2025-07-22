@@ -4,7 +4,7 @@ import streamlit as st
 from datetime import datetime
 from dotenv import load_dotenv
 
-import openai
+from openai import OpenAI
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -16,44 +16,37 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-# 🔐 OpenAI from secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# ✅ Use OpenAI SDK v1.x
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# 🖥️ Streamlit UI config
 st.set_page_config(page_title="TeluguSanskriti.ai", layout="centered")
 st.title("🕉️ TeluguSanskriti.ai - Preserving Telugu Culture")
 
-menu = st.sidebar.selectbox("Navigate", [
-    "Home", "Cultural Chatbot", "Contribute", "Gallery"
-])
+menu = st.sidebar.selectbox("Navigate", ["Home", "Cultural Chatbot", "Contribute", "Gallery"])
 
-# 🏠 Home Page
 if menu == "Home":
     st.image("https://upload.wikimedia.org/wikipedia/commons/6/6e/Telugu_calligraphy_word.svg", width=200)
     st.subheader("🙏 Welcome to TeluguSanskriti.ai")
     st.write("Preserve and contribute to Telugu food, folklore, dialects, literature, and more.")
 
-# 💬 Chatbot (with error logging)
 elif menu == "Cultural Chatbot":
-    st.subheader("🤖 Ask About Telugu Culture (Powered by ChatGPT)")
+    st.subheader("🤖 Ask About Telugu Culture (ChatGPT)")
     question = st.text_input("Ask your question:")
     if question and st.button("Ask ChatGPT"):
         with st.spinner("ChatGPT is thinking..."):
             try:
-                response = openai.ChatCompletion.create(
+                response = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are an expert in Telugu culture."},
                         {"role": "user", "content": question}
                     ]
                 )
-                answer = response["choices"][0]["message"]["content"]
                 st.markdown("**Answer:**")
-                st.markdown(answer)
+                st.markdown(response.choices[0].message.content)
             except Exception as e:
                 st.error(f"❌ Error: {e}")
 
-# ✍️ Contribution Page
 elif menu == "Contribute":
     st.subheader("📝 Share a Cultural Contribution")
     category = st.selectbox("Category", ["Folklore", "Festival", "Recipe", "Proverb", "Other"])
@@ -71,7 +64,6 @@ elif menu == "Contribute":
         db.collection("contributions").add(doc)
         st.success("✅ Your contribution has been saved. Thank you!")
 
-# 🖼️ Gallery Page
 elif menu == "Gallery":
     st.subheader("📸 Upload a Cultural Photo")
     uploaded_img = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
