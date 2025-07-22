@@ -16,7 +16,7 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-# 🔐 OpenAI key from secrets
+# 🔐 OpenAI from secrets
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # 🖥️ Streamlit UI config
@@ -33,12 +33,12 @@ if menu == "Home":
     st.subheader("🙏 Welcome to TeluguSanskriti.ai")
     st.write("Preserve and contribute to Telugu food, folklore, dialects, literature, and more.")
 
-# 💬 Chatbot
+# 💬 Chatbot (with error logging)
 elif menu == "Cultural Chatbot":
     st.subheader("🤖 Ask About Telugu Culture (Powered by ChatGPT)")
     question = st.text_input("Ask your question:")
     if question and st.button("Ask ChatGPT"):
-        with st.spinner("Thinking..."):
+        with st.spinner("ChatGPT is thinking..."):
             try:
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
@@ -47,10 +47,11 @@ elif menu == "Cultural Chatbot":
                         {"role": "user", "content": question}
                     ]
                 )
+                answer = response["choices"][0]["message"]["content"]
                 st.markdown("**Answer:**")
-                st.markdown(response["choices"][0]["message"]["content"])
+                st.markdown(answer)
             except Exception as e:
-                st.error("❌ Failed to fetch response. Check your API key or question.")
+                st.error(f"❌ Error: {e}")
 
 # ✍️ Contribution Page
 elif menu == "Contribute":
