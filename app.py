@@ -68,9 +68,14 @@ elif menu == "Gallery":
     st.subheader("📸 Upload a Cultural Photo")
     uploaded_img = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     caption = st.text_input("Caption (optional)")
+
     if uploaded_img and st.button("Upload Image"):
+        os.makedirs("uploads", exist_ok=True)  # ✅ Create uploads folder if not exists
         img_path = f"uploads/{uploaded_img.name}"
+
         with open(img_path, "wb") as f:
             f.write(uploaded_img.getbuffer())
+
         st.success("✅ Uploaded successfully!")
         st.image(uploaded_img, caption=caption)
+
