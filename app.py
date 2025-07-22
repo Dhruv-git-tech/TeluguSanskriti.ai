@@ -4,13 +4,12 @@ import streamlit as st
 from datetime import datetime
 from dotenv import load_dotenv
 
-import google.generativeai as genai
+import openai
 import whisper
-
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# 🌐 Load Firebase credentials from Streamlit Secrets
+# 🔐 Firebase from secrets
 if not firebase_admin._apps:
     firebase_config = json.loads(st.secrets["FIREBASE_KEY"])
     cred = credentials.Certificate(firebase_config)
@@ -18,42 +17,46 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-# 🤖 Load Gemini key from secrets
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-gemini_model = genai.GenerativeModel("gemini-pro")
+# 🔐 OpenAI from secrets
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# 🎙️ Load Whisper model once
+# 🎙️ Whisper model
 whisper_model = whisper.load_model("base")
 
-# 🚀 Streamlit Config
+# 🖥️ Streamlit setup
 st.set_page_config(page_title="TeluguSanskriti.ai", layout="centered")
 st.title("🕉️ TeluguSanskriti.ai - Preserving Telugu Culture")
 
-# 🔄 Menu
 menu = st.sidebar.selectbox("Navigate", [
     "Home", "Cultural Chatbot", "Contribute", "Gallery", "Dialect Recorder"
 ])
 
-# 🏠 Home Page
+# 🏠 Home
 if menu == "Home":
     st.image("https://upload.wikimedia.org/wikipedia/commons/6/6e/Telugu_calligraphy_word.svg", width=200)
     st.subheader("🙏 Welcome to TeluguSanskriti.ai")
     st.write("Preserve and contribute to Telugu food, folklore, dialects, literature, and more.")
 
-# 💬 Gemini Cultural Chatbot
+# 💬 Chatbot (OpenAI)
 elif menu == "Cultural Chatbot":
-    st.subheader("🤖 Ask About Telugu Culture")
-    question = st.text_input("Ask a question (English or Telugu):")
-    if question and st.button("Ask Gemini"):
-        with st.spinner("Gemini is thinking..."):
+    st.subheader("🤖 Ask About Telugu Culture (ChatGPT)")
+    question = st.text_input("Ask a question:")
+    if question and st.button("Ask ChatGPT"):
+        with st.spinner("ChatGPT is thinking..."):
             try:
-                response = gemini_model.generate_content(question)
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are an expert in Telugu culture."},
+                        {"role": "user", "content": question}
+                    ]
+                )
                 st.markdown("**Answer:**")
-                st.markdown(response.text)
+                st.markdown(response["choices"][0]["message"]["content"])
             except Exception as e:
-                st.error("Gemini failed to respond. Check your API key or question format.")
+                st.error("❌ OpenAI failed to respond. Check your API key or question.")
 
-# ✍️ Contribute to the Culture
+# ✍️ Contribute
 elif menu == "Contribute":
     st.subheader("📝 Share a Cultural Contribution")
     category = st.selectbox("Category", ["Folklore", "Festival", "Recipe", "Proverb", "Other"])
@@ -71,7 +74,7 @@ elif menu == "Contribute":
         db.collection("contributions").add(doc)
         st.success("✅ Your contribution has been saved. Thank you!")
 
-# 🖼️ Cultural Image Gallery
+# 🖼️ Gallery
 elif menu == "Gallery":
     st.subheader("📸 Upload a Cultural Photo")
     uploaded_img = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
@@ -83,7 +86,7 @@ elif menu == "Gallery":
         st.success("✅ Uploaded successfully!")
         st.image(uploaded_img, caption=caption)
 
-# 🔊 Dialect Recorder + Whisper Transcription
+# 🎙️ Dialect Recorder
 elif menu == "Dialect Recorder":
     st.subheader("🎙️ Upload Telugu Dialect Audio")
     dialect = st.selectbox("Dialect", ["Telangana", "Rayalaseema", "Coastal Andhra", "Other"])
@@ -92,11 +95,11 @@ elif menu == "Dialect Recorder":
         audio_path = f"audio/{audio_file.name}"
         with open(audio_path, "wb") as f:
             f.write(audio_file.getbuffer())
-        st.success("✅ Audio uploaded successfully.")
+        st.success("✅ Audio uploaded.")
         with st.spinner("Transcribing with Whisper..."):
             try:
                 result = whisper_model.transcribe(audio_path)
                 st.markdown("**Transcription:**")
                 st.text(result["text"])
             except Exception as e:
-                st.error("❌ Transcription failed. Try a different audio format.")
+                st.error("❌ Whisper failed to transcribe. Try another file.")
